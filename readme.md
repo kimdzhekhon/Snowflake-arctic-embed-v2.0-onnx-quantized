@@ -1,4 +1,4 @@
-# Buddhist Scripture Search Engine Optimization
+# Scripture Search Engine Optimization
 
 이 레포지토리는 Snowflake Arctic Embed v2.0 모델을 검색 엔진에 최적화하여 온디바이스용으로 변환한 프로젝트의 소스 코드를 담고 있습니다.
 
