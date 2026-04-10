@@ -1,6 +1,6 @@
 # Buddhist Scripture Search Engine Optimization
 
-이 레포지토리는 Snowflake Arctic Embed v2.0 모델을 불교 경전 검색 엔진에 최적화하여 온디바이스용으로 변환한 프로젝트의 소스 코드를 담고 있습니다.
+이 레포지토리는 Snowflake Arctic Embed v2.0 모델을 검색 엔진에 최적화하여 온디바이스용으로 변환한 프로젝트의 소스 코드를 담고 있습니다.
 
 ## 📁 주요 내용
 - **Model Optimization**: 어휘 가지치기(Pruning) 및 Int8 양자화 적용 코드
