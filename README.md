@@ -1,40 +1,247 @@
 <div align="center">
 
-# ❄️ Snowflake Arctic Embed v2.0 ONNX Quantized
+# Snowflake Arctic Embed M v2.0 — ONNX INT8 Quantized
 
-**불경 온디바이스 검색 엔진** — Snowflake Arctic Embed v2.0 모바일 최적화 ONNX 모델
+온디바이스 불경 검색을 위한 경량화 임베딩 모델 (768차원, 188MB)
 
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co)
-[![ONNX](https://img.shields.io/badge/ONNX-005CED?style=for-the-badge&logo=onnx&logoColor=white)](https://onnxruntime.ai)
-[![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
+![HuggingFace](https://img.shields.io/badge/🤗%20HuggingFace-Model-yellow?style=for-the-badge)
+![ONNX](https://img.shields.io/badge/ONNX-Runtime-green?style=for-the-badge)
+![Android](https://img.shields.io/badge/Android-On--Device-blue?style=for-the-badge)
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+![Compression](https://img.shields.io/badge/compression-85%25-orange?style=flat-square)
+
+**[HuggingFace 모델 보기 →](https://huggingface.co/Snowflake/snowflake-arctic-embed-m-v2.0)**
 
 </div>
 
 ---
 
-## 🌟 개요
+## 목차
 
-Snowflake Arctic Embed M v2.0(768차원)을 모바일 온디바이스 불경 검색에 맞게 최적화한 ONNX 모델입니다. 1.23GB → **188MB(85% 압축)**를 달성하여 Android 앱에 내장합니다.
+1. [소개](#소개)
+2. [주요 기능](#주요-기능)
+3. [기술 스택 / 최적화 내역](#기술-스택--최적화-내역)
+4. [아키텍처 / 구현 원리](#아키텍처--구현-원리)
+5. [데이터 흐름](#데이터-흐름)
+6. [설치 및 사용](#설치-및-사용)
+7. [Flutter 통합](#flutter-통합)
+8. [Roadmap](#roadmap)
+9. [라이선스](#라이선스)
 
-## 🛠 최적화 내역
+---
 
-| 항목 | 상세 | 비고 |
-|------|------|------|
-| **원본 모델** | Snowflake/snowflake-arctic-embed-m-v2.0 | 768차원 |
-| **어휘 프루닝** | 250,048 → 99,435 토큰 | 한/영/산스크리트 보존 |
-| **양자화** | Dynamic INT8 | 속도·배터리 효율 향상 |
-| **최종 용량** | 1.23GB → **188MB** | **85% 압축** |
+## 소개
 
-## 🔍 핵심 기술 상세
+Snowflake Arctic Embed M v2.0을 Android 온디바이스 불경(팔만대장경) 검색에 최적화한 ONNX INT8 양자화 모델입니다. 원본 1.23GB FP32 PyTorch 모델을 어휘 프루닝과 Dynamic INT8 양자화를 통해 188MB로 압축하여 서버 없이 Android 기기에서 직접 실행할 수 있습니다. 768차원 Matryoshka 임베딩을 지원하므로 사용 목적에 따라 앞 N차원만 잘라 속도와 메모리를 추가로 절감할 수 있습니다. 비대칭 검색 최적화가 적용되어 쿼리 프리픽스가 자동으로 부가됩니다.
 
-### 어휘 가지치기 (Vocabulary Pruning)
-한국어, 영어, 산스크리트어, 팔리어에 필요한 99,435개 토큰만 남기고 불필요한 어휘를 제거합니다. 임베딩 행렬 크기가 줄어 모델 용량이 대폭 감소합니다.
+> 이 모델은 팔만대장경 한국어·영어·산스크리트 텍스트를 모두 아우르는 어휘를 보존하면서 85%의 용량 절감을 달성하였습니다.
 
-### Matryoshka 임베딩
-768차원의 앞부분 N차원만으로도 의미 있는 표현 구성. 모바일 환경에서 차원을 줄여 검색 속도와 메모리 사용량을 조절합니다.
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
 
-### 비대칭 검색 최적화
-검색 쿼리에 전용 prefix를 자동 추가하여 쿼리-문서 비대칭 검색 성능을 향상시킵니다.
+---
 
-### Android 온디바이스 통합
-서버 없이 Android 앱 내에서 직접 ONNX Runtime으로 임베딩을 생성하여 프라이버시와 레이턴시를 동시에 확보합니다.
+## 주요 기능
+
+| 기능 | 설명 |
+|---|---|
+| 온디바이스 추론 | 서버 없이 Android에서 ONNX Runtime으로 직접 실행 |
+| Matryoshka 임베딩 | 768차원 전체 또는 앞 N차원만 사용하여 유연한 속도·정확도 트레이드오프 |
+| 비대칭 검색 최적화 | 쿼리 프리픽스 자동 삽입으로 문서-쿼리 비대칭 검색 지원 |
+| 어휘 프루닝 | 한국어·영어·산스크리트 관련 토큰만 보존하여 모델 크기 축소 |
+| Dynamic INT8 양자화 | 칼리브레이션 데이터 없이 런타임에 양자화 수행 |
+| 크로스플랫폼 ONNX | ONNX Runtime 지원 플랫폼 어디에서나 실행 가능 |
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## 기술 스택 / 최적화 내역
+
+| 항목 | 내용 |
+|---|---|
+| 베이스 모델 | Snowflake Arctic Embed M v2.0 |
+| 원본 크기 | 1.23GB (FP32 PyTorch) |
+| 최종 크기 | 188MB (85% 압축) |
+| 양자화 방식 | Dynamic INT8 (onnxruntime.quantization) |
+| 변환 도구 | Hugging Face optimum 라이브러리 |
+| 어휘 크기 변화 | 250,048 → 99,435 토큰 |
+| 보존 어휘 | 한국어 / 영어 / 산스크리트 |
+| 임베딩 차원 | 768d (Matryoshka, 앞 N차원 사용 가능) |
+| 추론 런타임 | ONNX Runtime (Android) |
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## 아키텍처 / 구현 원리
+
+```
+[Snowflake Arctic Embed M v2.0 아키텍처]
+
+입력 텍스트
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  토크나이저 (어휘 99,435 토큰)       │
+│  - 한/영/산스크리트 어휘 보존         │
+│  - 비대칭 쿼리 프리픽스 자동 삽입     │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│  ONNX 트랜스포머 인코더 (INT8)       │
+│  - Dynamic INT8 양자화 가중치         │
+│  - 멀티헤드 어텐션                    │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│  Matryoshka 임베딩 출력 (768d)       │
+│  - 앞 N차원만 사용 가능               │
+│  - L2 정규화                          │
+└─────────────────────────────────────┘
+```
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## 데이터 흐름
+
+```
+원본 PyTorch 모델 (1.23GB, 250k 어휘)
+      │
+      ▼
+어휘 프루닝 (한/영/산스크리트 99,435토큰 보존)
+      │
+      ▼
+ONNX 변환 (optimum 라이브러리)
+      │
+      ▼
+Dynamic INT8 양자화 (onnxruntime quantization)
+      │
+      ▼
+최종 모델 188MB → Android 기기 배포
+```
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## 설치 및 사용
+
+**요구사항**
+
+- Python 3.8+
+- `onnxruntime >= 1.16`
+- `transformers >= 4.35`
+- `optimum[onnxruntime]`
+
+```bash
+# HuggingFace Hub에서 모델 다운로드
+pip install huggingface_hub
+
+python - <<'EOF'
+from huggingface_hub import snapshot_download
+snapshot_download(
+    repo_id="Snowflake/snowflake-arctic-embed-m-v2.0",
+    local_dir="./model"
+)
+EOF
+```
+
+```python
+import onnxruntime as ort
+import numpy as np
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("./model")
+session = ort.InferenceSession("./model/model.onnx")
+
+query = "Represent this sentence for searching relevant passages: 반야바라밀다심경"
+inputs = tokenizer(query, return_tensors="np", padding=True, truncation=True, max_length=512)
+
+outputs = session.run(None, {
+    "input_ids": inputs["input_ids"],
+    "attention_mask": inputs["attention_mask"],
+})
+
+embedding = outputs[0][0]           # 768차원 전체
+embedding_256 = embedding[:256]     # 앞 256차원만 사용
+```
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## Flutter 통합
+
+Flutter Android 앱에서 ONNX Runtime으로 온디바이스 추론하는 방법입니다.
+
+```yaml
+# pubspec.yaml
+dependencies:
+  onnxruntime: ^1.x.x
+```
+
+```dart
+import 'package:onnxruntime/onnxruntime.dart';
+
+// 모델 로드
+final session = OrtSession.fromFile(
+  'assets/model.onnx',
+  OrtSessionOptions(),
+);
+
+// 토큰화된 입력 준비
+final List<int> tokenIds = /* 토크나이저 출력 */;
+final int seqLen = tokenIds.length;
+
+final inputs = {
+  'input_ids': OrtValueTensor.createTensorWithDataList(
+    tokenIds,
+    [1, seqLen],
+  ),
+};
+
+// 추론 실행
+final outputs = session.run(null, inputs);
+final embedding = outputs[0]?.value as List<List<double>>;
+
+// Matryoshka: 앞 N차원만 사용
+final embedding256 = embedding[0].sublist(0, 256);
+```
+
+> Android `assets/` 폴더에 `model.onnx`와 토크나이저 파일을 포함시키고, `pubspec.yaml`의 `flutter.assets`에 경로를 등록하세요.
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## Roadmap
+
+- [x] 어휘 프루닝 (250k → 99k 토큰)
+- [x] Dynamic INT8 양자화
+- [x] ONNX 변환
+- [x] Android 온디바이스 통합
+- [x] Matryoshka 임베딩 지원
+- [ ] iOS CoreML 변환 버전 추가
+- [ ] Static INT8 양자화 버전 비교
+- [ ] 벤치마크 문서 (속도·정확도)
+- [ ] FP16 버전 추가
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
+
+---
+
+## 라이선스
+
+MIT License
+
+Copyright (c) 2026 kimdzhekhon
+
+본 저장소의 최적화 코드 및 변환 스크립트는 MIT 라이선스로 배포됩니다. 베이스 모델(Snowflake Arctic Embed M v2.0)의 라이선스는 [HuggingFace 모델 카드](https://huggingface.co/Snowflake/snowflake-arctic-embed-m-v2.0)를 확인하세요.
+
+<div align="right"><a href="#목차">↑ 맨 위로</a></div>
